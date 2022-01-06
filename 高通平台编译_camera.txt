@@ -1,0 +1,155 @@
+
+
+1.编译xml配置文件
+	   #patch: vendor/qcom/proprietary/chi-cdk/tools/buildbins/
+	./buildbins.py --yaml-file-name buildbins_holi.yaml
+
+	#推库进行验证
+	adb push xxx.bin vendor/lib64/camera
+
+2.编译驱动文件cpp
+	#在代码的根路径下执行
+	source build/envsetup.sh
+	#选对应的项目
+	lunch
+	#编译对应的 sensor cpp 生成 so
+	make  com.qti.sensor.holi_jk_hi1336_main
+
+	#推库进行验证
+	adb push xxx.so vendor/lib64/camera
+	
+3.编译dtsi与kernel
+	#在代码的根路径下执行
+	source build/envsetup.sh
+	#选对应的项目
+	lunch
+	#编译dtsi
+	make dtboimage
+	#编译kernel
+	make bootimage
+
+// 待验证,不是很 确定  有没有用.. 
+//   https://www.cnblogs.com/szsky/articles/10843040.html
+2.frameworks/av/services/camera/目录：
+libcameraservice目录下：编译module是 ---> make libcameraservice -j1
+编译生成的文件是：out/target/product/lavender/system/lib/libcameraservice.so
+
+ # 如果是增量编译（指无新资源增加，在原有文件中修改，此编译效率较高）
+    > prebuilts/build-tools/linux-x86/bin/ninja -f [选择与lunch项目对应的combined ninja，文件在out跟目录] [moudle,如果多个以空格相隔] -j8[代表几个线程编译]
+    > prebuilts/build-tools/linux-x86/bin/ninja -f out/combined-ax3522_row.ninja  Settings -j8
+    > prebuilts/build-tools/linux-x86/bin/ninja -f out/combined-lito.ninja Settings -j8
+
+//  ninja 编译   dtbo 
+   prebuilts/build-tools/linux-x86/bin/ninja -f out/combined-QN5650.ninja dtboimage -j16
+
+
+刷机:
+   dtbo.img  boot.img  使用  
+ adb reboot bootloader 
+fastboot flash dtbo dtbo.img
+fastboot reboot  
+
+system.img 刷机方法:
+  adb reboot fastboot 
+  fastboot flash system system.img 
+   fastboot reboot   
+
+
+编译好
+指定模块后,如果我们想要将该模块对应的apk集成到系统镜像中,需要借助make snod指令重新打包系统镜像,这样我们新生成的system.img中就包含了刚才编译的Launcher2模块了.重启模拟器之后生效.
+make snod
+
+~/third_hard_disk/code/target/hardware/interfaces/automotive/evs/1.0
+ mmm  xxxx
+编译完后，打包成 system.img 
+make systemimage -j16
+
+make snod 命令，只打包，很快；
+
+
+
+
+camx  编译 生成 camera.qcom.so
+chi-cdk 编译 生成 :com.qti.chi.override.so
+// 编译 
+./prebuilts/build-tools/linux-x86/bin/ninja -d keepdepfile -f out/combined-QN5650.ninja -w dupbuild=err camera.qcom
+// 下载
+$ adb push out/target/product/QN5650/obj/SHARED_LIBRARIES/camera.qcom_intermediates/camera.qcom.so vendor/lib64/hw 
+
+
+#  以下  这种方式 不知道和上面的有啥区别??
+push  
+adb push out/target/product/xxx/vendor/lib64/hw/camera.qcom.so /vendor/lib64/hw/
+具体的还是要看  编译完后，给出的 提示信息:
+提示信息在哪个目录，就取这个目录 push  
+这种 提示信息:
+		[18/18] Install: out/target/product/QN5650/vendor/lib64/hw/camera.qcom.so
+
+#  hardware 修改
+验证 目录: 
+/target/hardware/interfaces/camera/provider/2.4
+打包成  vendor.img ，通过 fastboot 刷机进去，可以生效.
+
+
+https://wiki.huaqin.com:8443/pages/viewpage.action?pageId=1192002873
+高通CamX单编流程
+
+编译xml配置文件
+
+进入/vendor/qcom/proprietary/chi-cdk/tools/buildbins/
+执行以下命令：
+$ python buildbins.py --yaml-file-name buildbins_holi.yaml
+即可对holi_jk_hi1336_main的xml进行编译
+单编生成bin文件在以下目录中：
+
+.bin文件：/vendor/qcom/proprietary/chi-cdk/oem/qcom/bin
+
+执行以下命令进行推库验证：
+$ adb push xxx.bin vendor/lib64/camera
+
+编译驱动文件cpp
+
+进入代码根目录
+
+执行以下命令进行编译
+$ make  com.qti.sensor.holi_jk_hi1336_main
+单编生成bin文件在以下目录中：
+
+.so文件：/out/target/product/holi/vendor/lib64/camera/
+
+执行以下命令进行推库验证：
+$ adb push xxx.so vendor/lib64/camera
+
+adb shell pkill camera*
+
+
+
+
+// 清除 dmesg ..
+adb shell dmesg -C
+该平台有个问题，编译dtsi不生效，需要通过make vendorbootimage -j16 ,并烧录vendor-boot.img来生效
+
+msm-5.4 kernel 刷机
+   camera 驱动..
+         adb push ./obj/kernel/msm-5.4/techpack/camera/drivers/camera.ko  vendor/lib/modules/
+
+
+注意现在kernel中的camera会编译成camera.ko；需要push进去。单编boot 和 dtbo是不行的。
+
+
+修改: 
+~/third_hard_disk/code/target/vendor/qcom/proprietary/chi-cdk/oem/qcom/eeprom/gcore_gc5035_eeprom
+// mmm vendor/qcom/proprietary/chi-cdk/oem/qcom/ 
+out/target/product/QN5650/obj/SHARED_LIBRARIES/com.qti.eeprom.gcore_gc5035_intermediates/com.qti.eeprom.gcore_gc5035.so.toc
+
+会 生效:
+adb push out/target/product/QN5650/obj/SHARED_LIBRARIES/com.qti.eeprom.gcore_gc5035_intermediates/com.qti.eeprom.gcore_gc5035.so vendor/lib64/camera
+
+
+
+
+
+
+
+
+
