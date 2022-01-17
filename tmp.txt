@@ -1,0 +1,1 @@
+https://gerrit.xzb.com:9443/244729	project=BD1SW_QCOM_SAMSUNG/device/qcom/sepolicy

@@ -1,0 +1,7 @@
+https://gerrit.xzb.com:9443/244324	project=BD1SW_QCOM_SAMSUNG/kernel/msm-4.9
+https://gerrit.xzb.com:9443/244526	project=BD1SW_QCOM_SAMSUNG/kernel/msm-4.9
+https://gerrit.xzb.com:9443/244653	project=BD1SW_QCOM_SAMSUNG/device/qcom/sepolicy
+https://gerrit.xzb.com:9443/244666	project=BD1SW_QCOM_SAMSUNG/kernel/msm-4.9
+https://gerrit.xzb.com:9443/244729	project=BD1SW_QCOM_SAMSUNG/device/qcom/sepolicy
+
+https://gerrit.xzb.com:9443/244729	project=fcnt/LINUX/android/vendor/xzb/packages   
